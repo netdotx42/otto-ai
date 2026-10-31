@@ -1,6 +1,7 @@
 "use client";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { CornerDownLeft, Plus, Square } from "lucide-react";
+import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useAccount } from "wagmi";
@@ -131,7 +132,7 @@ function Terminal() {
             </div>
           )}
           {msgs.map((m) => (
-            <div key={m.id} className={m.role === "user" ? "flex justify-end" : ""}>
+            <motion.div key={m.id} className={m.role === "user" ? "flex justify-end" : ""} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
               {m.role === "user" ? (
                 <div className="mono max-w-[85%] rounded-lg bg-white/[0.05] px-3 py-2 text-[13px]">{m.content}</div>
               ) : (
@@ -159,7 +160,7 @@ function Terminal() {
                   )}
                 </div>
               )}
-            </div>
+            </motion.div>
           ))}
           <div ref={endRef} />
         </div>

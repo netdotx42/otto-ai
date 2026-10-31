@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+  workflow_dispatch:
+
+concurrency: { group: ci-${{ github.ref }}, cancel-in-progress: true }
+
+permissions: { contents: read }
+
+jobs:
+  contracts-base:
+    runs-on: ubuntu-24.04
+    defaults: { run: { working-directory: contracts/base } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+        with: { version: stable }
+      - run: ./install-deps.sh
+      - run: forge fmt --check src test script || true
+      - run: forge build --sizes
+      - run: forge test -vv
+        env: { FOUNDRY_PROFILE: ci }
+
+  contracts-solana:
+    runs-on: ubuntu-24.04
+    env: { AGAVE: v2.1.21, ANCHOR: 0.31.1 }
+    defaults: { run: { working-directory: contracts/solana } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/anchor
+            ~/.cache/solana
+            ~/solana-release
+          key: solana-${{ env.AGAVE }}-anchor-${{ env.ANCHOR }}
+      - name: Install Agave + Anchor
+        run: |
+          if [ ! -x ~/solana-release/bin/solana ]; then
+            curl -sSfL "https://github.com/anza-xyz/agave/releases/download/${AGAVE}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" | tar xj -C ~
+          fi
+          echo "$HOME/solana-release/bin" >> $GITHUB_PATH
+          command -v anchor || cargo install anchor-cli --version $ANCHOR --locked
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.28.0 }
+      - run: pnpm install --frozen-lockfile --ignore-workspace
+      - run: solana-keygen new --no-bip39-passphrase -s -o ~/.config/solana/id.json
+      - name: Program keypair (CI only; declare_id is synced from it)
+        run: |
+          mkdir -p target/deploy
+          [ -f target/deploy/agent98_pass-keypair.json ] || (solana-keygen new --no-bip39-passphrase -s -o target/deploy/agent98_pass-keypair.json && anchor keys sync)
+      - run: anchor build -- --features devnet
+      - run: bash scripts/test-local.sh
+
+  api:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: agent98, POSTGRES_PASSWORD: agent98, POSTGRES_DB: agent98_test }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    defaults: { run: { working-directory: apps/api } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with: { version: "0.5.14" }
+      - run: uv sync --frozen
+      - run: uv run ruff check app tests
+      - run: uv run pytest -q
+      - name: Migrations apply, roll back and re-apply on a fresh database
+        run: |
+          PGPASSWORD=agent98 psql -h localhost -U agent98 -d agent98_test -c 'CREATE DATABASE agent98_mig'
+          uv run alembic upgrade head && uv run alembic downgrade base && uv run alembic upgrade head
+        env: { DATABASE_URL: "postgresql+asyncpg://agent98:agent98@localhost:5432/agent98_mig" }
+
+  web:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.28.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @agent98/web typecheck
+      - run: pnpm --filter @agent98/web test
+      - run: pnpm --filter @agent98/web build
+      - run: pnpm --filter @agent98/web exec playwright install --with-deps chromium
+      - run: pnpm --filter @agent98/web e2e
+        env: { CI: "1" }
+
+  integration:
+    # Real chains (Anvil + local Solana validator). Heavier; runs on main and on demand.
+    if: github.event_name != 'pull_request'
+    needs: [contracts-base, contracts-solana, api]
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:16
+        env: { POSTGRES_USER: agent98, POSTGRES_PASSWORD: agent98, POSTGRES_DB: agent98_test }
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 5s --health-retries 10
+    env: { AGAVE: v2.1.21, ANCHOR: 0.31.1 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: foundry-rs/foundry-toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/anchor
+            ~/.cache/solana
+            ~/solana-release
+          key: solana-${{ env.AGAVE }}-anchor-${{ env.ANCHOR }}
+      - run: |
+          [ -x ~/solana-release/bin/solana ] || curl -sSfL "https://github.com/anza-xyz/agave/releases/download/${AGAVE}/solana-release-x86_64-unknown-linux-gnu.tar.bz2" | tar xj -C ~
+          echo "$HOME/solana-release/bin" >> $GITHUB_PATH
+          command -v anchor || cargo install anchor-cli --version $ANCHOR --locked
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.28.0 }
+      - uses: astral-sh/setup-uv@v5
+      - run: cd contracts/solana && pnpm install --frozen-lockfile --ignore-workspace
+      - run: cd apps/api && uv sync --frozen
+      - run: solana-keygen new --no-bip39-passphrase -s -o ~/.config/solana/id.json
+      - run: |
+          cd contracts/solana && mkdir -p target/deploy
+          [ -f target/deploy/agent98_pass-keypair.json ] || (solana-keygen new --no-bip39-passphrase -s -o target/deploy/agent98_pass-keypair.json && anchor keys sync)
+      - run: ./scripts/integration-local.sh
+
+  docker:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - run: docker build -f apps/api/Dockerfile -t agent98-api .
+      - run: docker build -f apps/web/Dockerfile -t agent98-web .

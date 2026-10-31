@@ -1,0 +1,8 @@
+**/node_modules
+**/.next
+**/.venv
+**/__pycache__
+contracts/solana/target
+contracts/base/out
+contracts/base/cache
+.git

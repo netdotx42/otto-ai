@@ -1,0 +1,41 @@
+# Local development stack. `docker compose up --build`, then open http://localhost:3000
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment: { POSTGRES_USER: agent98, POSTGRES_PASSWORD: agent98, POSTGRES_DB: agent98 }
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck: { test: ["CMD", "pg_isready", "-U", "agent98"], interval: 5s, retries: 10 }
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck: { test: ["CMD", "redis-cli", "ping"], interval: 5s, retries: 10 }
+  api:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    env_file: [apps/api/.env]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://agent98:agent98@postgres:5432/agent98
+      REDIS_URL: redis://redis:6379/0
+    ports: ["8000:8000"]
+    depends_on: { postgres: { condition: service_healthy }, redis: { condition: service_healthy } }
+  worker:
+    build: { context: ., dockerfile: apps/api/Dockerfile }
+    env_file: [apps/api/.env]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://agent98:agent98@postgres:5432/agent98
+      REDIS_URL: redis://redis:6379/0
+    command: ["arq", "app.workers.tasks.WorkerSettings"]
+    depends_on: { api: { condition: service_healthy } }
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:8000
+        NEXT_PUBLIC_NETWORK_MODE: testnet
+        NEXT_PUBLIC_BASE_PASS_ADDRESS: ${NEXT_PUBLIC_BASE_PASS_ADDRESS:-}
+        NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: ${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}
+    ports: ["3000:3000"]
+    depends_on: [api]
+volumes:
+  pgdata:

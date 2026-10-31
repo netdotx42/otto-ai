@@ -3,6 +3,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { VersionedTransaction } from "@solana/web3.js";
 import { useQueryClient } from "@tanstack/react-query";
 import { RefreshCw } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useSendTransaction, useSwitchChain } from "wagmi";
@@ -36,6 +37,7 @@ export function ExecutionPanel({ initial, onChange }: { initial: Execution; onCh
   const { switchChainAsync } = useSwitchChain();
   const { sendTransactionAsync } = useSendTransaction();
   const sol = useWallet();
+  const reduce = useReducedMotion();
 
   const update = (e: Execution) => {
     setEx(e);
@@ -105,7 +107,7 @@ export function ExecutionPanel({ initial, onChange }: { initial: Execution; onCh
   const outcome = stepOutcome(step);
   const canConfirm = ex.status === "awaiting_approval" && step.status === "awaiting_approval" && step.preview?.policy?.allowed;
   return (
-    <div className="space-y-3">
+    <motion.div className="space-y-3" key={step.id} initial={reduce ? false : { opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, ease: "easeOut" }}>
       <PreviewCard step={step} chain={ex.chain} />
       <div className="flex flex-wrap items-center gap-2">
         <Badge tone={statusTone(ex.status)} data-testid="exec-status">{ex.status.replace(/_/g, " ")}</Badge>
@@ -122,6 +124,6 @@ export function ExecutionPanel({ initial, onChange }: { initial: Execution; onCh
         </div>
       </div>
       {ex.status === "blocked" && <p className="text-xs text-bad">Blocked by the security policy: {ex.status_reason}</p>}
-    </div>
+    </motion.div>
   );
 }
