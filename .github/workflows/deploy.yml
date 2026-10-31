@@ -1,0 +1,37 @@
+name: Deploy (testnet)
+
+on:
+  workflow_dispatch:
+    inputs:
+      target: { description: "api|web", required: true, default: "api" }
+
+permissions: { contents: read, packages: write }
+
+jobs:
+  api-image:
+    if: inputs.target == 'api'
+    runs-on: ubuntu-24.04
+    environment: testnet
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with: { registry: ghcr.io, username: "${{ github.actor }}", password: "${{ secrets.GITHUB_TOKEN }}" }
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/api/Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/api:${{ github.sha }}
+      # Roll out to your managed container platform (Fly.io / Railway / Cloud Run / ECS).
+      # Requires platform credentials as environment secrets; see docs/DEPLOYMENT.md.
+  web:
+    if: inputs.target == 'web'
+    runs-on: ubuntu-24.04
+    environment: testnet
+    steps:
+      - uses: actions/checkout@v4
+      - run: npx vercel@39 deploy --prod --token "$VERCEL_TOKEN" --cwd apps/web --yes
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
