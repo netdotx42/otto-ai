@@ -329,7 +329,11 @@ async def parse_intent(text: str, chain_hint: Chain, wallet: str) -> ParseOutcom
     det = parse_deterministic(text, chain_hint, wallet)
     if det.intent or det.read_only:
         return det
-    llm = await parse_with_llm(text, chain_hint, wallet)
+    try:
+        llm = await parse_with_llm(text, chain_hint, wallet)
+    except Exception as e:  # noqa: BLE001 - LLM outage/quota must never break parsing; fall back
+        det.notes.append(f"LLM parser unavailable ({type(e).__name__}); used the deterministic parser only.")
+        return det
     if llm.intent or llm.read_only:
         llm.notes.append("Parsed with the LLM structured parser and verified against your text.")
         return llm

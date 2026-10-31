@@ -297,3 +297,15 @@ def test_tool_gate_blocks_unauthorized_tool():
         gate.check("simulator")  # INTEL may not prepare transactions
     with pytest.raises(ToolNotAllowed):
         gate.check("send_transaction")
+
+
+async def test_llm_outage_falls_back_to_deterministic(monkeypatch):
+    import app.execution.intent as intent_mod
+
+    async def boom(*a, **k):
+        raise RuntimeError("429 no credits")
+
+    monkeypatch.setattr(intent_mod, "parse_with_llm", boom)
+    out = await intent_mod.parse_intent("send my buddy some USDC", Chain.base, W)
+    assert out.intent is None and out.questions  # asks to clarify, never guesses, never crashes
+    assert any("LLM parser unavailable" in n for n in out.notes)
