@@ -1,0 +1,11 @@
+{
+  "name": "@agent98/shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chain registry, protocol allowlist, ABIs and IDLs shared by web and api",
+  "exports": {
+    "./chains.json": "./chains.json",
+    "./abi/Agent98Pass.json": "./abi/Agent98Pass.json",
+    "./idl/agent98_pass.json": "./idl/agent98_pass.json"
+  }
+}

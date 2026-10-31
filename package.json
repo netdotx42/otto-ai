@@ -1,0 +1,15 @@
+{
+  "name": "agent98",
+  "private": true,
+  "packageManager": "pnpm@10.28.0",
+  "scripts": {
+    "dev:web": "pnpm --filter @agent98/web dev",
+    "build:web": "pnpm --filter @agent98/web build",
+    "test:web": "pnpm --filter @agent98/web test"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

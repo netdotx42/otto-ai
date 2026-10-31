@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #080a0f;
+  --color-ink-2: #0c0f16;
+  --color-ink-3: #121620;
+  --color-line: rgb(255 255 255 / 0.07);
+  --color-line-strong: rgb(255 255 255 / 0.12);
+  --color-fg: #e8ebf2;
+  --color-muted: #8a93a6;
+  --color-dim: #5b6375;
+  --color-base: #2864f5;
+  --color-sol: #9945ff;
+  --color-sol-green: #14f195;
+  --color-ok: #14f195;
+  --color-warn: #f5b028;
+  --color-bad: #ff4d5e;
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+  --radius-xl: 14px;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes shimmer {
+    0% { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  background: var(--color-ink);
+  color: var(--color-fg);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Restrained ambient light: two very faint chain-colored washes, no gradients on content. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20% -10% auto -10%;
+  height: 60vh;
+  pointer-events: none;
+  z-index: -1;
+  background:
+    radial-gradient(40% 50% at 20% 0%, rgb(40 100 245 / 0.07), transparent 70%),
+    radial-gradient(35% 45% at 85% 5%, rgb(153 69 255 / 0.06), transparent 70%);
+}
+
+@layer components {
+  .glass {
+    background: rgb(255 255 255 / 0.018);
+    border: 1px solid var(--color-line);
+    backdrop-filter: blur(12px);
+  }
+  .hairline {
+    border-color: var(--color-line);
+  }
+  .mono {
+    font-family: var(--font-mono);
+    font-feature-settings: "zero" 1;
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .skeleton {
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.03) 0px, rgb(255 255 255 / 0.07) 80px, rgb(255 255 255 / 0.03) 160px);
+    background-size: 800px 100%;
+    animation: var(--animate-shimmer);
+  }
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--color-ink), 0 0 0 4px rgb(40 100 245 / 0.7);
+  }
+}
+
+::selection {
+  background: rgb(40 100 245 / 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* RainbowKit / Solana modal alignment with the system */
+.wallet-adapter-modal-wrapper {
+  background: var(--color-ink-2) !important;
+  border: 1px solid var(--color-line);
+}
