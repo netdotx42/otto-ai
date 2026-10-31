@@ -1,0 +1,59 @@
+[project]
+name = "agent98-api"
+version = "0.1.0"
+description = "AGENT//98 backend: auth, entitlements, AI modules, Level 3 assisted execution"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115,<0.120",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "sqlalchemy[asyncio]>=2.0.36",
+  "asyncpg>=0.30",
+  "alembic>=1.14",
+  "redis>=5.2",
+  "arq>=0.26",
+  "httpx>=0.28",
+  "eth-account>=0.13",
+  "eth-abi>=5.1",
+  "eth-utils>=5.1",
+  "solders>=0.23",
+  "pynacl>=1.5",
+  "base58>=2.1",
+  "langgraph>=0.2.60",
+  "openai>=1.58",
+  "sentry-sdk[fastapi]>=2.19",
+  "opentelemetry-api>=1.29",
+  "opentelemetry-sdk>=1.29",
+  "opentelemetry-exporter-otlp-proto-http>=1.29",
+  "opentelemetry-instrumentation-fastapi>=0.50b0",
+  "sse-starlette>=2.2",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3",
+  "pytest-asyncio>=0.25",
+  "respx>=0.22",
+  "fakeredis>=2.26",
+  "ruff>=0.8",
+  "mypy>=1.14",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
+testpaths = ["tests"]
+filterwarnings = ["ignore::DeprecationWarning"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "S"]
+ignore = ["S101", "B008", "E501", "S105", "S106", "S110"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S", "B"]

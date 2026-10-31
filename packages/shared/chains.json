@@ -1,0 +1,81 @@
+{
+  "$comment": "Single source of truth for chain constants and the protocol allowlist. Consumed by apps/web (TypeScript) and apps/api (Python). Any change here is security-relevant and must be reviewed.",
+  "pass": {
+    "priceUsdcBaseUnits": "1980000",
+    "priceDisplay": "1.98",
+    "maxBatch": 50,
+    "creditsPerPassPerPeriod": 500,
+    "maxPassesCountedForCredits": 20,
+    "creditPeriodDays": 30
+  },
+  "base": {
+    "mainnet": {
+      "chainId": 8453,
+      "name": "Base",
+      "explorer": "https://basescan.org",
+      "usdc": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "uniswapV3": {
+        "swapRouter02": "0x2626664c2603336E57B271c5C0b26F421741e481",
+        "quoterV2": "0x3d4e44Eb1374240CE5F1B871ab261CD16335B76a",
+        "factory": "0x33128a8fC17869897dcE68Ed026d694621f6FDfD"
+      },
+      "tokens": [
+        { "symbol": "USDC", "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", "decimals": 6, "stable": true },
+        { "symbol": "WETH", "address": "0x4200000000000000000000000000000000000006", "decimals": 18 },
+        { "symbol": "cbBTC", "address": "0xcbB7C0000aB88B473b1f5aFd9ef808440eed33Bf", "decimals": 8 },
+        { "symbol": "DAI", "address": "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb", "decimals": 18, "stable": true }
+      ]
+    },
+    "testnet": {
+      "chainId": 84532,
+      "name": "Base Sepolia",
+      "explorer": "https://sepolia.basescan.org",
+      "usdc": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "weth": "0x4200000000000000000000000000000000000006",
+      "uniswapV3": {
+        "swapRouter02": "0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4",
+        "quoterV2": "0xC5290058841028F1614F3A6F0F5816cAd0df5E27",
+        "factory": "0x4752ba5DBc23f44D87826276BF6Fd6b1C372aD24"
+      },
+      "tokens": [
+        { "symbol": "USDC", "address": "0x036CbD53842c5426634e7929541eC2318f3dCF7e", "decimals": 6, "stable": true },
+        { "symbol": "WETH", "address": "0x4200000000000000000000000000000000000006", "decimals": 18 }
+      ]
+    }
+  },
+  "solana": {
+    "mainnet": {
+      "cluster": "mainnet-beta",
+      "explorer": "https://solscan.io",
+      "usdc": "EPjFWdd5AufqSSqeM2qJ1zzybapC8G4wEGGkZwyTDt1v",
+      "jupiterAvailable": true,
+      "tokens": [
+        { "symbol": "USDC", "address": "EPjFWdd5AufqSSqeM2qJ1zzybapC8G4wEGGkZwyTDt1v", "decimals": 6, "stable": true },
+        { "symbol": "SOL", "address": "So11111111111111111111111111111111111111112", "decimals": 9, "native": true },
+        { "symbol": "USDT", "address": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB", "decimals": 6, "stable": true }
+      ]
+    },
+    "testnet": {
+      "cluster": "devnet",
+      "explorer": "https://solscan.io",
+      "explorerSuffix": "?cluster=devnet",
+      "usdc": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+      "jupiterAvailable": false,
+      "tokens": [
+        { "symbol": "USDC", "address": "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU", "decimals": 6, "stable": true },
+        { "symbol": "SOL", "address": "So11111111111111111111111111111111111111112", "decimals": 9, "native": true }
+      ]
+    },
+    "passProgramId": "ARd3pfR6GHqpLYr7sacHgjNwwagkzN15qmoq2GnHyw2Z",
+    "allowedPrograms": {
+      "11111111111111111111111111111111": "System Program",
+      "ComputeBudget111111111111111111111111111111": "Compute Budget",
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA": "SPL Token",
+      "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb": "SPL Token-2022",
+      "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL": "Associated Token Account",
+      "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4": "Jupiter Aggregator v6",
+      "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr": "SPL Memo"
+    }
+  }
+}
