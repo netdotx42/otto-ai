@@ -266,3 +266,27 @@ async def test_terminal_research_path(client, chain):
     c = (await client.post("/v1/terminal/conversations", json={})).json()
     r = await client.post(f"/v1/terminal/conversations/{c['id']}/stream", json={"prompt": f"Analyze this contract {WETH} before I approve anything", "chain": "base"})
     assert "event: evidence" in r.text and "event: detected" in r.text
+
+
+async def test_jupiter_key_routes_to_authenticated_tier(chain, monkeypatch):
+    from app.core.config import get_settings
+    from app.execution.valuation import input_usd_value
+
+    s = get_settings()
+    monkeypatch.setattr(s, "jupiter_api_key", "jup_pub_test")
+    chain.http.prices["So11111111111111111111111111111111111111112"] = 150.0
+    r = {"chain": "solana", "input_token": {"native": True, "decimals": 9, "address": "native"}, "amount_in": 10**9}
+    usd, src = await input_usd_value(chain.evm, chain.http, r)
+    assert usd == 150.0
+    url, headers = chain.http.requests[-1]
+    assert url.startswith("https://api.jup.ag/") and headers == {"x-api-key": "jup_pub_test"}
+
+
+async def test_no_jupiter_key_uses_lite_tier_without_header(chain):
+    from app.execution.valuation import input_usd_value
+
+    chain.http.prices["So11111111111111111111111111111111111111112"] = 150.0
+    r = {"chain": "solana", "input_token": {"native": True, "decimals": 9, "address": "native"}, "amount_in": 10**9}
+    await input_usd_value(chain.evm, chain.http, r)
+    url, headers = chain.http.requests[-1]
+    assert url.startswith("https://lite-api.jup.ag/") and headers == {}

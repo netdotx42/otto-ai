@@ -29,6 +29,7 @@ requires your keys/accounts to run against real networks · **External** = requi
 | Level 3 lifecycle on Solana (SOL/SPL transfers) | Done | |
 | Solana swaps via Jupiter | Done in code; Needs mainnet | Jupiter only routes on mainnet; blocked on devnet with an explanation. Not exercised against live Jupiter in this sandbox. |
 | Policy engine (20+ checks), digest-bound single-use approvals | Done | |
+| Jupiter API key (authenticated tier) | Supported | Set `JUPITER_API_KEY`; requests then go to api.jup.ag with `x-api-key`. Verified live with a real mainnet quote. |
 | LLM intent parsing / INTEL narrative | Needs credentials (optional) | `OPENAI_API_KEY`. Deterministic parser & summaries work without it. The LLM path is unit-tested on validated outputs; live OpenAI calls were not exercised here. |
 | Ten modules | Done | ALPHA runs on Base logs; Solana anomaly windows not implemented. WHALE/ALPHA log spans capped at 2,000 blocks per call (RPC limits). |
 | Background workers (indexing, rules, confirmations) | Done | arq; Base native-ETH large-transfer triggers not supported (no logs) — ERC-20 only. |

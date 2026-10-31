@@ -336,7 +336,7 @@ class Portfolio(Module):
             elif h["chain"] == "solana" and int(h["raw"]) > 0 and solana_cfg().get("jupiterAvailable"):
                 mint = "So11111111111111111111111111111111111111112" if h["token"] == "native" else h["token"]
                 try:
-                    r = await ctx.clients.http.get(f"{get_settings().jupiter_api_url}/price/v3", params={"ids": mint})
+                    r = await ctx.clients.http.get(f"{get_settings().jupiter_base()}/price/v3", params={"ids": mint}, headers=get_settings().jupiter_headers())
                     p = r.json().get(mint, {}).get("usdPrice") if r.status_code == 200 else None
                     if p is not None:
                         h["usd"], h["price_source"] = float(Decimal(str(p)) * Decimal(h["amount"])), "Jupiter Price API v3"

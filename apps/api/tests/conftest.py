@@ -7,6 +7,7 @@ os.environ["ENV"] = "test"
 os.environ["NETWORK_MODE"] = "testnet"
 os.environ["BASE_PASS_ADDRESS"] = "0x9898989898989898989898989898989898989898"
 os.environ["OPENAI_API_KEY"] = ""
+os.environ["JUPITER_API_KEY"] = ""
 os.environ["APP_DOMAIN"] = "localhost:3000"
 os.environ["APP_ORIGIN"] = "http://localhost:3000"
 

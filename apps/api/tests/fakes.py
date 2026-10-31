@@ -295,8 +295,10 @@ class FakeHttp:
 
     def __init__(self) -> None:
         self.prices: dict[str, float] = {}
+        self.requests: list[tuple[str, dict[str, str]]] = []
 
-    async def get(self, url: str, params: dict[str, Any] | None = None):
+    async def get(self, url: str, params: dict[str, Any] | None = None, headers: dict[str, str] | None = None):
+        self.requests.append((url, headers or {}))
         class R:
             def __init__(self, code: int, body: Any) -> None:
                 self.status_code, self._b = code, body
@@ -311,7 +313,8 @@ class FakeHttp:
             return R(200, {})
         return R(404, {})
 
-    async def post(self, url: str, json: Any = None):
+    async def post(self, url: str, json: Any = None, headers: dict[str, str] | None = None):
+        self.requests.append((url, headers or {}))
         class R:
             status_code = 503
 

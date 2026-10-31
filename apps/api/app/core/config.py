@@ -42,6 +42,17 @@ class Settings(BaseSettings):
     openai_api_key: str = ""
     openai_model: str = "gpt-4.1-mini"
     jupiter_api_url: str = "https://lite-api.jup.ag"
+    # With a key, requests go to the authenticated api.jup.ag tier (higher limits) unless
+    # JUPITER_API_URL is set explicitly. The key is a secret: environment only, never committed.
+    jupiter_api_key: str = ""
+
+    def jupiter_base(self) -> str:
+        if self.jupiter_api_key and self.jupiter_api_url == "https://lite-api.jup.ag":
+            return "https://api.jup.ag"
+        return self.jupiter_api_url
+
+    def jupiter_headers(self) -> dict[str, str]:
+        return {"x-api-key": self.jupiter_api_key} if self.jupiter_api_key else {}
     sentry_dsn: str = ""
     otel_exporter_otlp_endpoint: str = ""
 

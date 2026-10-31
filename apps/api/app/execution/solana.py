@@ -128,21 +128,22 @@ async def research(sol, http, intent: TransactionIntent) -> dict[str, Any]:
 
 
 async def jupiter_quote(http, tin: ResolvedToken, tout: ResolvedToken, amount: int, slippage_bps: int) -> Quote:
-    base = get_settings().jupiter_api_url
+    st = get_settings()
+    base = st.jupiter_base()
     params = {
         "inputMint": WSOL if tin.native else tin.address,
         "outputMint": WSOL if tout.native else tout.address,
         "amount": str(amount), "slippageBps": str(slippage_bps),
         "restrictIntermediateTokens": "true", "onlyDirectRoutes": "false",
     }
-    r = await http.get(f"{base}/swap/v1/quote", params=params)
+    r = await http.get(f"{base}/swap/v1/quote", params=params, headers=st.jupiter_headers())
     if r.status_code != 200:
         raise APIError(502, "quote_failed", f"Jupiter quote failed ({r.status_code}).")
     data = r.json()
     now = time.time()
     impact = data.get("priceImpactPct")
     return Quote(
-        provider="jupiter v6 (lite-api)",
+        provider="jupiter v6 (api.jup.ag)" if st.jupiter_api_key else "jupiter v6 (lite-api)",
         route=[step["swapInfo"].get("label", "?") for step in data.get("routePlan", [])],
         amount_in=int(data["inAmount"]), amount_out=int(data["outAmount"]),
         min_amount_out=int(data["otherAmountThreshold"]),
@@ -213,9 +214,10 @@ async def build_step(sol, http, kind: str, intent: TransactionIntent, r: dict[st
         return BuiltStep(kind="transfer", tx=tx, digest=solana_digest(tx["message_b64"]), decoded=decoded, expires_at=None)
     # swap via Jupiter
     q = Quote(**r["quote"])
-    base = get_settings().jupiter_api_url
+    st = get_settings()
     resp = await http.post(
-        f"{base}/swap/v1/swap",
+        f"{st.jupiter_base()}/swap/v1/swap",
+        headers=st.jupiter_headers(),
         json={"quoteResponse": q.raw, "userPublicKey": wallet, "wrapAndUnwrapSol": True, "dynamicComputeUnitLimit": True},
     )
     if resp.status_code != 200:
